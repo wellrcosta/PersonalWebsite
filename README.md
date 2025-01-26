@@ -1,36 +1,144 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# **Personal Website**
 
-## Getting Started
+This is my **personal website project** built with **Next.js 15**, **Shadcn UI**, and **TailwindCSS**.  
+The site includes:
 
-First, run the development server:
+- **Blog:** Where I share content and ideas.
+- **Personal Tasks:** A space to manage my daily tasks.
+
+Data is persisted using **Supabase**, ensuring a dynamic and interactive experience.
+
+---
+
+## **📂 Project Structure**
+
+```plaintext
+├── app/               # Main site pages
+├── components/        # Reusable components
+├── supabase/          # Have a SQL script to create tables and rules
+├── utils/             # Utility functions
+├── hooks/             # Only have a toast hook for now
+├── lib/               # Custom libraries
+├── supabase/          # Supabase configuration and SQL
+│   └── supabase.sql   # Script to create tables and rules
+├── public/            # Public assets (images, icons, etc.)
+└── README.md          # This file
+```
+
+---
+
+## **🚀 Technologies Used**
+
+- [Next.js 15](https://nextjs.org/)
+- [Shadcn UI](https://shadcn.dev/)
+- [TailwindCSS](https://tailwindcss.com/)
+- [Supabase](https://supabase.com/)
+
+---
+
+## **📦 Installation**
+
+### **1. Clone the repository**
+
+```bash
+git clone https://github.com/your-username/your-project.git
+cd your-project
+```
+
+### **2. Install dependencies**
+
+Ensure you have Node.js installed, then run:
+
+```bash
+npm install
+```
+
+### **3. Configure the environment**
+
+Create a **`.env.local`** file in the project root with the following variables:
+
+```plaintext
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
+
+> Replace `your-supabase-url` and `your-anon-key` with the values provided in your Supabase dashboard.
+
+### **4. Set up Supabase**
+
+1. Log in to your Supabase dashboard.
+2. Navigate to the **SQL Editor** tab and copy the contents of:  
+   `supabase/supabase.sql`.
+3. Run the script to create the necessary tables and rules.
+
+---
+
+## **💻 Running the Project**
+
+Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser to view the site.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## **🛠 Useful Commands**
 
-## Learn More
+- **Build for Production:**
+  ```bash
+  npm run build
+  ```
+- **Start Production Server:**
+  ```bash
+  npm start
+  ```
+- **Lint and Format Code:**
+  ```bash
+  npm run lint
+  ```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## **🌟 Key Features**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Dynamic Blog:**
+   - Simple and intuitive interface.
+   - Data stored and fetched from Supabase.
+2. **Task Manager:**
 
-## Deploy on Vercel
+   - Create, edit, and organize personal tasks.
+   - Data persistence using Supabase.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. **Test User:**
+   - A test account is available for exploring the app.
+     - **Email:** `test@test.com`
+     - **Password:** `test`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## **📝 Contributing**
+
+If you want to contribute:
+
+1. Fork the project.
+2. Create a branch for your feature:
+   ```bash
+   git checkout -b my-feature
+   ```
+3. Commit your changes:
+   ```bash
+   git commit -m "Added new feature"
+   ```
+4. Push your branch:
+   ```bash
+   git push origin my-feature
+   ```
+
+---
+
+## **📄 License**
+
+This project is licensed under the MIT License.
