@@ -61,7 +61,7 @@ export default function Home() {
                 </Button>
                 <Button variant="outline" asChild>
                   <a
-                    href="https://github.com"
+                    href="https://github.com/wellrcosta"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -71,7 +71,7 @@ export default function Home() {
                 </Button>
                 <Button variant="outline" asChild>
                   <a
-                    href="https://linkedin.com"
+                    href="https://www.linkedin.com/in/wellington-reisf/"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
