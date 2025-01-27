@@ -16,7 +16,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { RichTextEditor } from "@/components/rich-text-editor";
+import { Textarea } from "@/components/ui/textarea";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 
 interface Post {
   id: string;
@@ -63,7 +67,7 @@ export default function BlogPost() {
   }
 
   const handleEdit = async () => {
-    if (!user || !post) return;
+    if (!user || !post || user.email === "test@test.com") return;
 
     const { error } = await supabase
       .from("posts")
@@ -82,9 +86,11 @@ export default function BlogPost() {
     await fetchPost();
   };
 
+  const canManagePosts = user && user.email !== "test@test.com";
+
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-16 max-w-4xl">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-secondary rounded w-3/4"></div>
           <div className="h-4 bg-secondary rounded w-1/4"></div>
@@ -100,7 +106,7 @@ export default function BlogPost() {
 
   if (!post) {
     return (
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-16 max-w-4xl">
         <Card className="p-8 text-center">
           <h1 className="text-2xl font-bold mb-4">Post not found</h1>
           <p className="text-muted-foreground mb-6">
@@ -116,13 +122,13 @@ export default function BlogPost() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-16">
+    <div className="container mx-auto px-4 py-16 max-w-4xl">
       <div className="flex justify-between items-center mb-8">
         <Button variant="ghost" onClick={() => router.push("/blog")}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Blog
         </Button>
-        {user && (
+        {canManagePosts && (
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -130,7 +136,7 @@ export default function BlogPost() {
                 Edit Post
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl">
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle>Edit Post</DialogTitle>
               </DialogHeader>
@@ -146,12 +152,14 @@ export default function BlogPost() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="content">Content</Label>
-                  <RichTextEditor
-                    content={editedPost.content}
-                    onChange={(content) =>
-                      setEditedPost({ ...editedPost, content })
+                  <Label htmlFor="content">Content (Markdown)</Label>
+                  <Textarea
+                    id="content"
+                    value={editedPost.content}
+                    onChange={(e) =>
+                      setEditedPost({ ...editedPost, content: e.target.value })
                     }
+                    className="min-h-[400px] font-mono whitespace-pre-wrap"
                   />
                 </div>
                 <Button onClick={handleEdit} className="w-full">
@@ -162,7 +170,7 @@ export default function BlogPost() {
           </Dialog>
         )}
       </div>
-      <article className="prose prose-slate dark:prose-invert max-w-none">
+      <article className="prose prose-slate dark:prose-invert lg:prose-lg mx-auto">
         <h1 className="text-4xl font-bold mb-4">{post.title}</h1>
         <div className="text-muted-foreground mb-8">
           {new Date(post.created_at).toLocaleDateString("en-US", {
@@ -171,10 +179,46 @@ export default function BlogPost() {
             day: "numeric",
           })}
         </div>
-        <div
-          className="leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
+        <div className="markdown-content">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              code({ className, children }) {
+                const match = /language-(\w+)/.exec(className || "");
+                const isInline = !match;
+                return !isInline ? (
+                  <SyntaxHighlighter
+                    style={oneDark}
+                    language={match![1]}
+                    PreTag="div"
+                  >
+                    {String(children).replace(/\n$/, "")}
+                  </SyntaxHighlighter>
+                ) : (
+                  <code className={className}>{children}</code>
+                );
+              },
+              p: ({ children }) => (
+                <p style={{ whiteSpace: "pre-wrap" }}>{children}</p>
+              ),
+              ul: ({ children }) => <ul className="my-6">{children}</ul>,
+              ol: ({ children }) => <ol className="my-6">{children}</ol>,
+              h1: ({ children }) => <h1 className="mt-8 mb-4">{children}</h1>,
+              h2: ({ children }) => <h2 className="mt-8 mb-4">{children}</h2>,
+              h3: ({ children }) => <h3 className="mt-6 mb-4">{children}</h3>,
+              h4: ({ children }) => <h4 className="mt-6 mb-4">{children}</h4>,
+              h5: ({ children }) => <h5 className="mt-6 mb-4">{children}</h5>,
+              h6: ({ children }) => <h6 className="mt-6 mb-4">{children}</h6>,
+              blockquote: ({ children }) => (
+                <blockquote className="my-6 border-l-4 border-primary/20 pl-6 italic">
+                  {children}
+                </blockquote>
+              ),
+            }}
+          >
+            {post.content}
+          </ReactMarkdown>
+        </div>
       </article>
     </div>
   );

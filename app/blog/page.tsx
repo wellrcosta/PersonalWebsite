@@ -42,7 +42,7 @@ export default function Blog() {
 
   const handleDelete = async (postId: string, e: React.MouseEvent) => {
     e.preventDefault(); // Prevent the Link from triggering
-    if (!user) return;
+    if (!user || user.email === "test@test.com") return;
 
     const { error } = await supabase.from("posts").delete().eq("id", postId);
 
@@ -55,7 +55,6 @@ export default function Blog() {
   };
 
   function getReadTime(content: string) {
-    // Remove HTML tags for word count
     const text = content.replace(/<[^>]*>/g, "");
     const wordsPerMinute = 200;
     const words = text.trim().split(/\s+/).length;
@@ -64,13 +63,43 @@ export default function Blog() {
   }
 
   function getExcerpt(content: string) {
-    // Remove HTML tags and decode HTML entities
-    const div = document.createElement("div");
-    div.innerHTML = content;
-    const text = div.textContent || div.innerText || "";
-    const words = text.trim().split(/\s+/);
-    return words.slice(0, 30).join(" ") + (words.length > 30 ? "..." : "");
+    // Create a temporary div to parse HTML content
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = content;
+
+    // Get text content from specific elements we want to include
+    const textParts: string[] = [];
+    const validElements = tempDiv.querySelectorAll("p, h1, h2, h3, h4, h5, h6");
+
+    for (const element of validElements) {
+      // Skip empty paragraphs
+      if (element.textContent?.trim()) {
+        textParts.push(element.textContent.trim());
+      }
+
+      // Break if we have enough content
+      if (textParts.join(" ").length > 200) {
+        break;
+      }
+    }
+
+    // Join the text parts and limit to ~200 characters
+    let excerpt = textParts.join(" ");
+    if (excerpt.length > 200) {
+      excerpt = excerpt.slice(0, 200).trim();
+      // Try to end at a complete word
+      const lastSpace = excerpt.lastIndexOf(" ");
+      if (lastSpace > 150) {
+        // Only trim to last word if we're not cutting too much
+        excerpt = excerpt.slice(0, lastSpace);
+      }
+      excerpt += "...";
+    }
+
+    return excerpt;
   }
+
+  const canManagePosts = user && user.email !== "test@test.com";
 
   return (
     <div className="container mx-auto px-4 py-16">
@@ -81,7 +110,7 @@ export default function Blog() {
             Thoughts, stories, and technical guides
           </p>
         </div>
-        {user && (
+        {canManagePosts && (
           <Button asChild>
             <Link href="/blog/new">
               <PlusCircle className="w-4 h-4 mr-2" aria-hidden="true" />
@@ -96,10 +125,10 @@ export default function Blog() {
           {[1, 2, 3].map((i) => (
             <Card key={i} className="p-6">
               <div className="animate-pulse space-y-4">
-                <div className="h-6 bg-secondary rounded w-3/4"></div>
-                <div className="h-4 bg-secondary rounded w-5/6"></div>
-                <div className="flex justify-between items-center">
-                  <div className="h-4 bg-secondary rounded w-24"></div>
+                <div className="h-8 bg-secondary rounded w-3/4"></div>
+                <div className="h-20 bg-secondary rounded-lg w-full"></div>
+                <div className="flex items-center gap-4">
+                  <div className="h-4 bg-secondary rounded w-32"></div>
                   <div className="h-4 bg-secondary rounded w-20"></div>
                 </div>
               </div>
@@ -110,35 +139,43 @@ export default function Blog() {
         <div className="grid gap-6">
           {posts.map((post) => (
             <Link key={post.id} href={`/blog/${post.id}`}>
-              <Card className="p-6 hover:shadow-lg transition-shadow duration-200 group">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
-                    <p className="text-muted-foreground mb-4">
-                      {getExcerpt(post.content)}
-                    </p>
-                    <div className="flex justify-between items-center text-sm text-muted-foreground">
-                      <span>
+              <Card className="p-8 hover:shadow-lg transition-all duration-200 group">
+                <article>
+                  <header className="mb-4">
+                    <h2 className="text-2xl font-bold mb-2 group-hover:text-primary transition-colors">
+                      {post.title}
+                    </h2>
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <time dateTime={post.created_at}>
                         {new Date(post.created_at).toLocaleDateString("en-US", {
                           year: "numeric",
                           month: "long",
                           day: "numeric",
                         })}
-                      </span>
+                      </time>
+                      <span>·</span>
                       <span>{getReadTime(post.content)}</span>
                     </div>
+                  </header>
+                  <div className="prose dark:prose-invert max-w-none text-muted-foreground">
+                    <p className="line-clamp-3">{getExcerpt(post.content)}</p>
                   </div>
-                  {user && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity ml-4"
-                      onClick={(e) => handleDelete(post.id, e)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  )}
-                </div>
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="text-sm font-medium text-primary group-hover:underline">
+                      Read more
+                    </span>
+                    {canManagePosts && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => handleDelete(post.id, e)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
+                </article>
               </Card>
             </Link>
           ))}
@@ -149,7 +186,7 @@ export default function Blog() {
               <p className="text-muted-foreground mb-6">
                 Create your first blog post to get started
               </p>
-              {user && (
+              {canManagePosts && (
                 <Button asChild>
                   <Link href="/blog/new">
                     <PlusCircle className="w-4 h-4 mr-2" aria-hidden="true" />
