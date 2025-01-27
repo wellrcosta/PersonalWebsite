@@ -7,6 +7,7 @@ import { PlusCircle, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
+import ReactMarkdown from "react-markdown";
 
 interface Post {
   id: string;
@@ -55,7 +56,7 @@ export default function Blog() {
   };
 
   function getReadTime(content: string) {
-    const text = content.replace(/<[^>]*>/g, "");
+    const text = content.replace(/[#*`]/g, ""); // Remove markdown symbols
     const wordsPerMinute = 200;
     const words = text.trim().split(/\s+/).length;
     const minutes = Math.ceil(words / wordsPerMinute);
@@ -63,40 +64,47 @@ export default function Blog() {
   }
 
   function getExcerpt(content: string) {
-    // Create a temporary div to parse HTML content
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = content;
+    // Remove code blocks as they might contain complex content
+    const withoutCodeBlocks = content.replace(/```[\s\S]*?```/g, "");
 
-    // Get text content from specific elements we want to include
-    const textParts: string[] = [];
-    const validElements = tempDiv.querySelectorAll("p, h1, h2, h3, h4, h5, h6");
+    // Remove inline code
+    const withoutInlineCode = withoutCodeBlocks.replace(/`[^`]*`/g, "");
 
-    for (const element of validElements) {
-      // Skip empty paragraphs
-      if (element.textContent?.trim()) {
-        textParts.push(element.textContent.trim());
-      }
+    // Remove images
+    const withoutImages = withoutInlineCode.replace(/!\[.*?\]\(.*?\)/g, "");
 
-      // Break if we have enough content
-      if (textParts.join(" ").length > 200) {
-        break;
-      }
+    // Remove links but keep text
+    const withoutLinks = withoutImages.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+
+    // Remove HTML tags if any
+    const withoutHtml = withoutLinks.replace(/<[^>]*>/g, "");
+
+    // Remove multiple newlines and spaces
+    const cleanText = withoutHtml
+      .replace(/\n+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    // Get first 200 characters
+    if (cleanText.length <= 200) {
+      return cleanText;
     }
 
-    // Join the text parts and limit to ~200 characters
-    let excerpt = textParts.join(" ");
-    if (excerpt.length > 200) {
-      excerpt = excerpt.slice(0, 200).trim();
-      // Try to end at a complete word
-      const lastSpace = excerpt.lastIndexOf(" ");
-      if (lastSpace > 150) {
-        // Only trim to last word if we're not cutting too much
-        excerpt = excerpt.slice(0, lastSpace);
-      }
-      excerpt += "...";
+    // Try to end at a sentence
+    const truncated = cleanText.slice(0, 200);
+    const lastPeriod = truncated.lastIndexOf(".");
+    const lastQuestion = truncated.lastIndexOf("?");
+    const lastExclamation = truncated.lastIndexOf("!");
+
+    const lastSentence = Math.max(lastPeriod, lastQuestion, lastExclamation);
+
+    if (lastSentence > 150) {
+      return cleanText.slice(0, lastSentence + 1);
     }
 
-    return excerpt;
+    // If no good sentence break, try to break at a word
+    const lastSpace = truncated.lastIndexOf(" ");
+    return cleanText.slice(0, lastSpace) + "...";
   }
 
   const canManagePosts = user && user.email !== "test@test.com";
